@@ -1,33 +1,48 @@
 version: '3'
+
 services:
   service-config:
     image: service-config
     tty: false
     ports:
       - 8888:8888
+    networks:
+      - test-network
+
   eureka-server:
     image: eureka-server
-    environment:
-      eureka.client.serviceUrl.defaultZone: http://localhost:8761/eureka/
     tty: false
     ports:
       - 8761:8761
+    depends_on:
+      - service-config
+    networks:
+      - test-network
   zuul:
     image: api-gateway
-#    environment:
-#      eureka.client.serviceUrl.defaultZone: http://localhost:8761/eureka/
+    environment:
+     eureka.client.serviceUrl.defaultZone: http://eureka-server:8761/eureka/
     depends_on:
+      - service-config
       - eureka-server
     tty: false
     ports:
       - 8080:8080
+    networks:
+      - test-network
 
   hello-world:
     image: hello-world
-#    environment:
-#      eureka.client.serviceUrl.defaultZone: http://localhost:8761/eureka/
-    depends_on:
-      - eureka-server
+    environment:
+      eureka.client.serviceUrl.defaultZone: http://eureka-server:8761/eureka/
     tty: false
     ports:
       - 8081:8081
+    depends_on:
+      - service-config
+      - eureka-server
+    networks:
+      - test-network
+
+networks:
+  test-network:
